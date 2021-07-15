@@ -708,18 +708,6 @@ class Scratch3UdlTello {
         return m;
     }
 
-    /**
-     * Update the current tempo, clamping it to the min and max allowable range.
-     * @param {number} tempo - the tempo to set, in beats per minute.
-     * @private
-     */
-    _updateTempo (tempo) {
-        const stage = this.runtime.getTargetForStage();
-        if (stage) {
-            stage.tempo = tempo;
-        }
-    }
-
 }
 
 module.exports = Scratch3UdlTello;
