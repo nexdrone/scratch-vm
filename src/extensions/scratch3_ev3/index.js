@@ -77,11 +77,17 @@ const Ev3Opcode = {
     OPOUTPUT_STEP_SYNC: 0xB0,
     OPOUTPUT_TIME_SYNC: 0xB1,
     OPOUTPUT_GET_COUNT: 0xB3,
+    OPOUTPUT_START: 0xA6,
+    OPOUTPUT_POWER: 0xA4,
+    OPOUTPUT_SPEED: 0xA5,
+    OPOUTPUT_PRG_STOP: 0xB4,
     OPSOUND: 0x94,
     OPSOUND_CMD_TONE: 1,
     OPSOUND_CMD_STOP: 0,
     OPINPUT_DEVICE_LIST: 0x98,
-    OPINPUT_READSI: 0x9D
+    OPINPUT_READSI: 0x9D,
+    OPPROGRAM_START: 0x03,
+    OPPROGRAM_STOP: 0x02,
 };
 
 /**
@@ -282,6 +288,255 @@ class EV3Motor {
     }
 
     /**
+     * This function is to be used for starting an existing user program on the EV3 P-brick.
+     * Found in the 'EV3 Firmware Developer Kit', page 10, at
+     * https://education.lego.com/en-us/support/mindstorms-ev3/developer-kits.
+     *
+     * Opcode arguments:
+     */
+    _programStart () {
+        //console.log("this._programStart() start");
+        let byteCommand = [];
+        byteCommand[0] = Ev3Opcode.OPPROGRAM_START;
+
+        const cmd = this._parent.generateCommand(
+            Ev3Command.DIRECT_COMMAND_NO_REPLY,
+            byteCommand
+        );
+
+        this._parent.send(cmd);
+    }
+    
+    /**
+     * Stop specific program ID slot.
+     * Found in the 'EV3 Firmware Developer Kit', page 10, at
+     * https://education.lego.com/en-us/support/mindstorms-ev3/developer-kits.
+     *
+     * Opcode arguments:
+     */
+    _programStop () {
+        //console.log("this._programStop() start");
+        let byteCommand = [];
+        byteCommand[0] = Ev3Opcode.OPPROGRAM_STOP;
+
+        const cmd = this._parent.generateCommand(
+            Ev3Command.DIRECT_COMMAND_NO_REPLY,
+            byteCommand
+        );
+
+        this._parent.send(cmd);
+    }
+
+    /**
+     * This function enables restting the tacho count for the individual output ports.
+     * Found in the 'EV3 Firmware Developer Kit', page 53, at
+     * https://education.lego.com/en-us/support/mindstorms-ev3/developer-kits.
+     *
+     * Opcode arguments:
+     */
+    _outputStart (port) {
+        //console.log("this._outputStart() start");
+        let byteCommand = [];
+        byteCommand[0] = Ev3Opcode.OPOUTPUT_START;
+
+        // Generate motor command values
+        byteCommand = byteCommand.concat([
+            Ev3Args.LAYER,
+            port
+        ]);
+
+        const cmd = this._parent.generateCommand(
+            Ev3Command.DIRECT_COMMAND_NO_REPLY,
+            byteCommand
+        );
+
+        this._parent.send(cmd);
+    }
+
+    /**
+     * This function enables restting the tacho count for the individual output ports.
+     * Found in the 'EV3 Firmware Developer Kit', page 53, at
+     * https://education.lego.com/en-us/support/mindstorms-ev3/developer-kits.
+     *
+     * Opcode arguments:
+     */
+    _outputStop (port) {
+        //console.log("this._outputStop() port: " + port + " start");
+        let byteCommand = [];
+        byteCommand[0] = Ev3Opcode.OPOUTPUT_STOP;
+
+        byteCommand = byteCommand.concat([
+            Ev3Args.LAYER,
+            port,
+            1//Ev3Args.COAST
+        ]);
+
+        const cmd = this._parent.generateCommand(
+            Ev3Command.DIRECT_COMMAND_NO_REPLY,
+            byteCommand
+        );
+
+        //console.dir(cmd);
+        this._parent.send(cmd);
+    }
+
+    /**
+     * This function enables restting the tacho count for the individual output ports.
+     * Found in the 'EV3 Firmware Developer Kit', page 53, at
+     * https://education.lego.com/en-us/support/mindstorms-ev3/developer-kits.
+     *
+     * Opcode arguments:
+     */
+    _outputPrgStop () {
+        //console.log("this._outputPrgStop() start");
+        let byteCommand = [];
+        byteCommand[0] = Ev3Opcode.OPOUTPUT_PRG_STOP;
+
+        byteCommand = byteCommand.concat([
+            Ev3Args.LAYER
+        ]);
+
+        const cmd = this._parent.generateCommand(
+            Ev3Command.DIRECT_COMMAND_NO_REPLY,
+            byteCommand
+        );
+
+        this._parent.send(cmd);
+    }
+
+    /**
+     * This function enables restting the tacho count for the individual output ports.
+     * Found in the 'EV3 Firmware Developer Kit', page 53, at
+     * https://education.lego.com/en-us/support/mindstorms-ev3/developer-kits.
+     *
+     * Opcode arguments:
+     */
+    _outputReset () {
+        //console.log("this._outputReset() start");
+        let byteCommand = [];
+        byteCommand[0] = Ev3Opcode.OPOUTPUT_RESET;
+
+        const cmd = this._parent.generateCommand(
+            Ev3Command.DIRECT_COMMAND_NO_REPLY,
+            byteCommand
+        );
+
+        this._parent.send(cmd);
+    }
+
+    /**
+     * This function enables setting the output percentage power on the output ports.
+     * Found in the 'EV3 Firmware Developer Kit', page 53, at
+     * https://education.lego.com/en-us/support/mindstorms-ev3/developer-kits.
+     *
+     * Opcode arguments:
+     * (Data8) LAYER – Specify chain layer number [0 - 3]
+     * (Data8) NOS – Output bit field [0x00 – 0x0F]
+     * (Data8) POWER – Specify output speed [-100 – 100 %]
+     */
+    _motorPower (port, power) {
+        //console.log("this._motorPower() port: " + port + ", power: " + power + " start");
+        let byteCommand = [];
+        byteCommand[0] = Ev3Opcode.OPOUTPUT_POWER;
+
+        byteCommand = byteCommand.concat([
+            Ev3Args.LAYER,
+            port,
+            power
+        ]);
+
+        const cmd = this._parent.generateCommand(
+            Ev3Command.DIRECT_COMMAND_NO_REPLY,
+            byteCommand
+        );
+
+        this._parent.send(cmd);
+    }
+
+    /**
+     * This function enables starting the specified output port.
+     * Found in the 'EV3 Firmware Developer Kit', page 53, at
+     * https://education.lego.com/en-us/support/mindstorms-ev3/developer-kits.
+     *
+     * Opcode arguments:
+     * (Data8) LAYER – Specify chain layer number [0 - 3]
+     * (Data8) NOS – Output bit field [0x00 – 0x0F]
+     */
+    motorStart () {
+        const port = this._portMask(this._index);
+
+        this._programStop();
+        this._programStart();
+        this._outputReset();
+    }
+
+    /**
+     * This function enables starting the specified output port.
+     * Found in the 'EV3 Firmware Developer Kit', page 53, at
+     * https://education.lego.com/en-us/support/mindstorms-ev3/developer-kits.
+     *
+     * Opcode arguments:
+     * (Data8) LAYER – Specify chain layer number [0 - 3]
+     * (Data8) NOS – Output bit field [0x00 – 0x0F]
+     */
+    motorStop () {
+        const port = this._portMask(this._index);
+
+        this._motorPower(port, 0)
+        this._outputStop(port);
+        this._programStop();
+    }
+
+    /**
+     * This function enables setting the output percentage speed on the output ports. 
+     * This modes automatically enables speed control, which means the system will automatically adjust the power to keep the specified speed.
+     * Found in the 'EV3 Firmware Developer Kit', page 53, at
+     * https://education.lego.com/en-us/support/mindstorms-ev3/developer-kits.
+     *
+     * Opcode arguments:
+     * (Data8) LAYER – Specify chain layer number [0 - 3]
+     * (Data8) NOS – Output bit field [0x00 – 0x0F]
+     * (Data8) SPEED – Specify output speed [-100 – 100 %]
+     */
+    motorKeepTurning () {
+        //console.log("this.motorKeepTurning() start");
+        if (this._power === 0) return;
+
+        const port = this._portMask(this._index);
+        let speed = this._power * this._direction;
+
+        // If speed is less than zero, make it positive and multiply the input
+        // value by -1
+        if (speed < 0) {
+            speed = -1 * speed;
+        }
+
+        // If the input value is less than 0
+        const dir = (this._direction < 0) ? 0x100 - speed : speed; // step negative or positive
+
+        let byteCommand = [];
+        byteCommand[0] = Ev3Opcode.OPOUTPUT_SPEED;
+
+        // Generate motor command values
+        byteCommand = byteCommand.concat([
+            Ev3Args.LAYER,
+            port,
+            Ev3Encoding.ONE_BYTE,
+            dir & 0xff
+        ]);
+
+        const cmd = this._parent.generateCommand(
+            Ev3Command.DIRECT_COMMAND_NO_REPLY,
+            byteCommand
+        );
+        //console.dir(cmd);
+
+        this._parent.send(cmd);
+
+        this._outputStart(port);
+    }
+
+    /**
      * Turn this motor on for a specific duration.
      * Found in the 'EV3 Firmware Developer Kit', page 56, at
      * https://education.lego.com/en-us/support/mindstorms-ev3/developer-kits.
@@ -318,6 +573,7 @@ class EV3Motor {
         const dir = (n < 0) ? 0x100 - speed : speed; // step negative or positive
         n = Math.abs(n);
         // Setup motor run duration and ramping behavior
+
         let rampup = ramp;
         let rampdown = ramp;
         let run = n - (ramp * 2);
@@ -347,6 +603,7 @@ class EV3Motor {
         );
 
         this._parent.send(cmd);
+        //console.dir(cmd);
 
         this.coastAfter(milliseconds);
     }
@@ -388,6 +645,7 @@ class EV3Motor {
             ]
         );
 
+        //console.dir(cmd);
         this._parent.send(cmd, false); // don't use rate limiter to ensure motor stops
     }
 
@@ -669,6 +927,7 @@ class EV3 {
             if (!this._rateLimiter.okayToSend()) return Promise.resolve();
         }
 
+        //console.log("====> message: " + Base64Util.uint8ArrayToBase64(message));
         return this._bt.sendMessage({
             message: Base64Util.uint8ArrayToBase64(message),
             encoding: 'base64'
@@ -1138,7 +1397,55 @@ class Scratch3Ev3Blocks {
                             defaultValue: 0.5
                         }
                     }
-                }
+                },
+                {
+                    opcode: 'motorKeepTurningClockwise',
+                    text: formatMessage({
+                        id: 'ev3.motorKeepTurningClockwise',
+                        default: 'motor [PORT] keep turning this way',
+                        description: 'Keep turning a motor clockwise.'
+                    }),
+                    blockType: BlockType.COMMAND,
+                    arguments: {
+                        PORT: {
+                            type: ArgumentType.STRING,
+                            menu: 'motorPorts',
+                            defaultValue: 0
+                        }
+                    }
+                },
+                {
+                    opcode: 'motorKeepTurningCounterClockwise',
+                    text: formatMessage({
+                        id: 'ev3.motorKeepTurningCounterClockwise',
+                        default: 'motor [PORT] keep turning that way',
+                        description: 'Keep turning a motor counterclockwise.'
+                    }),
+                    blockType: BlockType.COMMAND,
+                    arguments: {
+                        PORT: {
+                            type: ArgumentType.STRING,
+                            menu: 'motorPorts',
+                            defaultValue: 0
+                        }
+                    }
+                },
+                {
+                    opcode: 'motorStop',
+                    text: formatMessage({
+                        id: 'ev3.motorStop',
+                        default: 'motor [PORT] stop',
+                        description: 'stop motor'
+                    }),
+                    blockType: BlockType.COMMAND,
+                    arguments: {
+                        PORT: {
+                            type: ArgumentType.STRING,
+                            menu: 'motorPorts',
+                            defaultValue: 0
+                        }
+                    }
+                },
             ],
             menus: {
                 motorPorts: {
@@ -1151,6 +1458,53 @@ class Scratch3Ev3Blocks {
                 }
             }
         };
+    }
+
+    motorKeepTurningClockwise (args) {
+        const port = Cast.toNumber(args.PORT);
+        //console.log("----- motorKeepTurningClockwise start: " + port);
+
+        return new Promise(resolve => {
+            this._forEachMotor(port, motorIndex => {
+                const motor = this._peripheral.motor(motorIndex);
+                if (motor) {
+                    motor.direction = 1;
+                    motor.motorKeepTurning();
+                }
+            });
+            setTimeout(resolve, 500);
+        });
+    }
+
+    motorKeepTurningCounterClockwise (args) {
+        const port = Cast.toNumber(args.PORT);
+        //console.log("----- motorKeepTurningCounterClockwise start: " + port);
+
+        return new Promise(resolve => {
+            this._forEachMotor(port, motorIndex => {
+                const motor = this._peripheral.motor(motorIndex);
+                if (motor) {
+                    motor.direction = -1;
+                    motor.motorKeepTurning();
+                }
+            });
+            setTimeout(resolve, 500);
+        });
+    }
+
+    motorStop (args) {
+        const port = Cast.toNumber(args.PORT);
+        //console.log("----- motorStop start: " + port);
+
+        return new Promise(resolve => {
+            this._forEachMotor(port, motorIndex => {
+                const motor = this._peripheral.motor(motorIndex);
+                if (motor) {
+                    motor.motorStop();
+                }
+            });
+            setTimeout(resolve, 500);
+        });
     }
 
     motorTurnClockwise (args) {
