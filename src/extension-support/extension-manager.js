@@ -25,6 +25,7 @@ const builtinExtensions = {
     boost: () => require('../extensions/scratch3_boost'),
     gdxfor: () => require('../extensions/scratch3_gdx_for'),
     udltello: () => require('../extensions/scratch3_udltello'),
+    udlcameraar: () => require('../extensions/scratch3_udlcameraar'),
 };
 
 /**
