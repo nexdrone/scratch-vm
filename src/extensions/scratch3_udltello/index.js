@@ -157,6 +157,8 @@ class Scratch3UdlTello {
         this.tello_temperature = 0;
 
 
+        this.ardetectintervalid;
+
         //this._onTargetCreated = this._onTargetCreated.bind(this);
         //this.runtime.on('targetWasCreated', this._onTargetCreated);
     }
@@ -271,6 +273,16 @@ class Scratch3UdlTello {
                     }
                 },
                 {
+                    opcode: 'armarkerdetectstart',
+                    text: 'ARマーカー処理開始',
+                    blockType: BlockType.COMMAND,
+                },
+                {
+                    opcode: 'armarkerdetectend',
+                    text: 'ARマーカー処理終了',
+                    blockType: BlockType.COMMAND,
+                },
+                {
                     opcode: 'armarkerdetected',
                     text: 'ARマーカーの[n]が見えたとき',
                     blockType: BlockType.HAT,
@@ -282,11 +294,13 @@ class Scratch3UdlTello {
                         }
                     }
                 },
+                /*
                 {
                     opcode: 'armarkeruse',
                     text: 'ARマーカー処理利用',
                     blockType: BlockType.HAT,
                 },
+                */
                 {
                     opcode: 'armarkerchasestart',
                     text: '[n]のARマーカーを追いかけ始める',
@@ -587,6 +601,7 @@ class Scratch3UdlTello {
         });
     }
 
+    /** 
     armarkeruse() {
         if (this.isBlockExists(_ARMARKER_HAT_BLOCK_)) {
             CefSharp.BindObjectAsync("boundAsync");
@@ -594,6 +609,23 @@ class Scratch3UdlTello {
                 armarkerdetectnum.push(ret);
             });
         }
+    }
+    */
+   
+    armarkerdetectstart() {
+        this.ardetectintervalid = setInterval(() => {
+            console.log("called armarkerdetectstart()");
+            CefSharp.BindObjectAsync("boundAsync");
+            boundAsync.armarkerdetected((ret)=>{
+                console.log("called armarkerdetectstart() return: " + ret);
+                armarkerdetectnum.push(ret);
+            });
+        }, 500);
+    }
+
+    armarkerdetectend() {
+        console.log("called armarkerdetectend(): " + this.ardetectintervalid.toString());
+        clearInterval(this.ardetectintervalid);
     }
 
     getBatteryPercentage() {
